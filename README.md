@@ -10,7 +10,7 @@
 
 ```sh
 
-a4 : Generated the needed files based on the Grammar file under the /gen/ dir
+a4 : Generates the needed files based on the Grammar file under the /gen/ dir
 
 jc : Compiles the code in Main.java
 
