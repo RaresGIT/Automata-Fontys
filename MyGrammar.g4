@@ -13,16 +13,33 @@ arithmetic_expr
  | numeric_entity                        # ArithmeticExpressionNumericEntity
  ;
 
- numeric_entity : NUMBER;
+ printstmt      :
+                PRINT numeric_entity
+                ;
 
+declaration     :
+                INT NAME
+                ;
+
+numeric_entity  : NUMBER
+                | IDENTIFIER
+                ;
+
+assignstmt      :
+                NAME ASSIGN arithmetic_expr
+                ;
 
 // tokens
-
-NUMBER      : [0-9]+ ; 
+IDENTIFIER  : [a-zA-Z_][a-zA-Z_0-9]* ;
+NUMBER      : [0-9]+ ;
 MULT        : '*';
 DIV         : '/';
 PLUS        : '+';
 MINUS       : '-';
 LPAREN      : '(';
 RPAREN      : ')';
-WS 			: [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
+WS 			    : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
+PRINT       : 'print';
+SEMICOLON   : ';';
+ASSIGN      : '=';
+NAME        : [a-z]+ ;
