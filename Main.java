@@ -1,139 +1,178 @@
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
+
 import java.util.*;
-import java.lang.Integer;
 
-class MyListener extends MyGrammarBaseListener
-{
-	void print(Object nr)
-	{
-		System.out.println(nr);
+class Value {
+
+	public static Value VOID = new Value(new Object());
+
+	final Object value;
+
+	public Value(Object value) {
+		this.value = value;
 	}
 
-	Map<String, Integer> variables = new HashMap<String, Integer>();
-	Stack numbers = new Stack<Integer>();
-	// @Override public void enterMyStart(MyGrammarParser.ArithmeticExpressionMultContext ctx)
-	// {
-	// 	// TODO: investigate contents of 'ctx'
-	// 	System.err.println("enterMyStart()");
-	// }
-
-	// @Override public void exitMyStart(MyGrammarParser.ArithmeticExpressionMultContext ctx)
-	// {
-	// 	// TODO: investigate contents of 'ctx'
-	// 	System.err.println("exitMyStart()");
-	// }
-	@Override public void exitArithmeticExpressionPlus(MyGrammarParser.ArithmeticExpressionPlusContext ctx)
-	{
-		Integer n1= 0,n2 = 0;
-
-		  if(numbers.size() >=  2)
-		  {
-			 n1 = (Integer) numbers.pop();
-		 	 n2 = (Integer) numbers.pop();
-		  }
-
-		Integer sum = n1 + n2;
-
-		numbers.push(sum);
-
+	public Boolean asBoolean() {
+		return (Boolean) value;
 	}
 
-	@Override public void exitArithmeticExpressionNegation(MyGrammarParser.ArithmeticExpressionNegationContext ctx)
-	{
-
-		Integer nr = (Integer) numbers.pop();
-
-		numbers.push(0-nr);
-
+	public Integer asInteger() {
+		return (Integer) value;
 	}
 
-	@Override public void exitArithmeticExpressionDiv(MyGrammarParser.ArithmeticExpressionDivContext ctx)
-	{
-		 Integer n1= 0,n2 = 0;
-
-		  if(numbers.size() >=  2)
-		  {
-			 n1 = (Integer) numbers.pop();
-		 	 n2 = (Integer) numbers.pop();
-		  }
-
-		  Integer div = n1/n2;
-
-		 numbers.push(div);
-
+	public String asString() {
+		return String.valueOf(value);
 	}
 
-	@Override public void exitArithmeticExpressionMinus(MyGrammarParser.ArithmeticExpressionMinusContext ctx)
-	{
-		Integer n1= 0,n2 = 0;
+	@Override
+	public int hashCode() {
 
-		if(numbers.size() >=  2)
-		{
-		   n1 = (Integer) numbers.pop();
-			n2 = (Integer) numbers.pop();
+		if (value == null) {
+			return 0;
 		}
 
-		Integer minus = n1-n2;
-
-		numbers.push(minus);
+		return this.value.hashCode();
 	}
 
-	@Override public void exitArithmeticExpressionMult(MyGrammarParser.ArithmeticExpressionMultContext ctx)
-	{
-		Integer n1= 0,n2 = 0;
+	@Override
+	public boolean equals(Object o) {
 
-		if(numbers.size() >=  2)
-		{
-		   n1 = (Integer) numbers.pop();
-			n2 = (Integer) numbers.pop();
+		if (value == o) {
+			return true;
 		}
 
-		Integer mult = n1*n2;
+		if (value == null || o == null || o.getClass() != value.getClass()) {
+			return false;
+		}
 
-		numbers.push(mult);
+		Value that = (Value) o;
+
+		return this.value.equals(that.value);
 	}
 
-	@Override public void exitPrintstmt(MyGrammarParser.PrintstmtContext ctx)
-	{
-		String key = ctx.getText();
-		keyUpd = key.replace("print", "");
-		System.out.println(variables.get(keyUpd));
-	}
-
-	@Override public void visitTerminal(TerminalNode node)
-	{
-		System.err.println("terminal-node: '" + node.getText() + "'");
-
-		if(!"+-()*/<EOF>".contains(node.getText()))
-			numbers.push(Integer.parseInt(node.getText()));
-		if("=".contains(node.getText()))
-			String[] parts = node.getText().split("=");
-			variables.put(parts[0], Integer.parseInt(parts[1]));
-
-
-		print(numbers);
-		print(variables);
-		// TODO: print line+column, token's type, etc.
+	@Override
+	public String toString() {
+		return String.valueOf(value);
 	}
 }
 
-public class Main
-{
-    public static void main(String[] args) throws Exception
-	{
-        CharStream input = CharStreams.fromStream(System.in);
-		MyGrammarLexer lexer = new MyGrammarLexer(input);
+class MyVisitor extends Example2BaseVisitor<Object> {
 
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+	public Map<String, String> variables = new HashMap<String, String>();
 
-		// TODO: print the lexer's vocabulary and the actual list of tokens
+	public void print(Object... args) {
+		for (Object object : args) {
+			System.out.println(object.toString());
+		}
+	}
 
-        MyGrammarParser parser = new MyGrammarParser(tokens);
+	@Override
+	public Object visitExprOperation(Example2Parser.ExprOperationContext ctx) {
 
-        ParseTree tree = parser.myStart();
+		// TODO: IMPLEMENT OPERATIONS USING THESE VARIABLES
+		// MAIN PB: FIND A WAY TO SUPPORT BOTH LITERALS (FETCH VAR VALUE FROM VARIABLES
+		// STACK) + NUMBERS FOR OPERATIONS
+		String leftTerm = visit(ctx.expr(0)).toString();
+		String rightTerm = visit(ctx.expr(1)).toString();
+		String operation = visit(ctx.SIGN()).toString();
+		Integer result = 0;
 
-		MyListener m = new MyListener();
-		ParseTreeWalker.DEFAULT.walk(m, tree);
-    }
+		// THESE CAN BE PARSED ONLY IF THEY ARE ACTUALLY NUMBERS, NOT VARIABLES!!!
+
+		// switch (operation) {
+		// // so because of that, we need to take into account which
+		// case "+": {
+		// result = leftTerm + rightTerm;
+		// }
+		// case "-": {
+		// result = leftTerm - rightTerm;
+		// }
+		// }
+		return visitChildren(ctx);
+	}
+
+	@Override
+	public Object visitAssign(Example2Parser.AssignContext ctx) {
+
+		String variableName = visit(ctx.CHAR()).toString();
+		String value = visit(ctx.expr()).toString();
+
+		variables.put(variableName, value);
+
+		return visitChildren(ctx);
+	}
+
+	@Override
+	public Object visitIfStat(Example2Parser.IfStatContext ctx) {
+
+		String boolean_expr = visit(ctx.boolean_expr()).toString();
+		String boolean_exp = ctx.boolean_expr().getText();
+		String stat1 = visit(ctx.statement(0)).toString();
+		String stat2 = "";
+
+		print(boolean_exp);
+		if (ctx.statement().size() > 1)
+			stat2 = visit(ctx.statement(1)).toString();
+
+		if (Boolean.valueOf(boolean_expr))
+			// do stat1
+			print("do stat1");
+
+		if (!Boolean.valueOf(boolean_expr))
+			// do stat2
+			print("do stat2");
+
+		return visitChildren(ctx);
+	}
+
+	@Override
+	public Object visitPrint(Example2Parser.PrintContext ctx) {
+		List<String> printables = new ArrayList<String>();
+		Integer count = ctx.expr().size();
+
+		for (int i = 0; i < count; i++) {
+			printables.add(visit(ctx.expr(i)).toString());
+		}
+		print(printables);
+		return visitChildren(ctx);
+	}
+
+	@Override
+	public Object visitLoop(Example2Parser.LoopContext ctx) {
+
+		String boolean_expr = visit(ctx.boolean_expr()).toString();
+		String statement = visit(ctx.statement()).toString();
+
+		print(visit(ctx.statement()));
+		print(visitChildren(ctx.statement()));
+		while (Boolean.valueOf(boolean_expr)) {
+			print("do statement");
+		}
+		return visitChildren(ctx);
+	}
+
+	@Override
+	public Object visitTerminal(TerminalNode node) {
+		System.err.println("[" + node.getText() + "]");
+		return new Value(node.getText());
+	}
+}
+
+public class Main {
+
+	public static void main(String[] args) throws Exception {
+
+		CharStream input = CharStreams.fromStream(System.in);
+		Example2Lexer lexer = new Example2Lexer(input);
+
+		CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+		Example2Parser parser = new Example2Parser(tokens);
+
+		ParseTree tree = parser.start2();
+
+		Example2Visitor<Object> visitor = new MyVisitor();
+		visitor.visit(tree);
+	}
 }
