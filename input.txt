@@ -1,11 +1,17 @@
-x = 5
-y = 10
-z = 15
-a = x + 5
-a = x + y
-boolean = true
-print a, 73+b, abc
-while (c && d) do e+f+g
-if x>y then y else z fi
-if x<z then print zzz fi
-print bla, x and y
+x = 5;
+y = 10;
+z = 15;
+a = x + 5;
+a = x + y;
+c = true;
+d = true;
+f = a + x;
+g = x + y;
+e = 0;
+boolean = true;
+log a;
+while (c && d) {e=f+g; c=!c;}
+log c;
+if x>y {y=z;} else {z=y;}
+log x;
+

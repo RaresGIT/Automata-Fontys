@@ -1,62 +1,124 @@
-
 grammar Example2;
 
-//Rules
-start2		: statement* EOF;
-statement	: loop | print | expr | ifStat | assign;
+parse
+ : block EOF
+ ;
 
+block
+ : stat*
+ ;
 
-loop		: WHILE LPARAN boolean_expr RPARAN DO statement;
-print		: PRINT expr ( COMMA expr )*;
-ifStat		: IF boolean_expr THEN statement ( ELSE statement )? FI;
-assign		: CHAR ASSIGN expr;
+stat
+ : assignment
+ | if_stat
+ | while_stat
+ | log
+ | OTHER {System.err.println("unknown char: " + $OTHER.text);}
+ ;
 
-expr		: expr SIGN expr    		   # exprOperation
-			| LPARAN expr SIGN expr RPARAN # booleanOperation
-			| BOOLEAN			# boolean
-			| NUMBER			# number
-			| CHAR				# char	
-			;
+assignment
+ : ID ASSIGN expr SCOL
+ ;
 
-//define boolean rules that can be used inside if or loop checks
-boolean_expr : NUMBER GREATER NUMBER # greaterNumber
-			 | NUMBER SMALLER NUMBER # smallerNumber
-			 | NUMBER BOOL_EQUAL NUMBER # eqNumber
-			 | CHAR GREATER CHAR # varGreater
-			 | CHAR SMALLER CHAR # varSmaller
-			 | CHAR BOOL_EQUAL CHAR # varEqual
-			 | expr SIGN expr # twoExprRule
-			 | BOOLEAN # isBool
-			 ;
+if_stat
+ : IF condition_block (ELSE IF condition_block)* (ELSE stat_block)?
+ ;
 
-//Tokens
-NUMBER		: [0-9]+ ; 
-GREATER		: '>';
-SMALLER		: '<';
-BOOL_EQUAL	: '==';
-LPARAN		: '(';
-RPARAN		: ')';
-ASSIGN		: '=';
-COMMA		: ',';
-PRINT		: 'print';
-WHILE		: 'while';
-IF			: 'if';
-THEN		: 'then';
-ELSE		: 'else';
-FI			: 'fi';
-DO			: 'do';
-DOT			: '.';
-PARAM		: '"' ~('\r' | '\n' | '"')* '"';
-CHAR 		: [_A-Za-z][A-Za-z_!0-9.]* ; 
-WS 			: [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
-SIGN		: '*'
-			| '/'
-			| '+'
-			| '-'
-			| '&&' // and
-			| '||' // or
-			;
+condition_block
+ : expr stat_block
+ ;
 
-BOOLEAN		: 'true'
-			| 'false'
-			;
+stat_block
+ : OBRACE block CBRACE
+ | stat
+ ;
+
+while_stat
+ : WHILE expr stat_block
+ ;
+
+log
+ : LOG expr SCOL
+ ;
+
+expr
+ : MINUS expr                           #unaryMinusExpr
+ | NOT expr                             #notExpr
+ | expr op=(MULT | DIV | MOD) expr      #multiplicationExpr
+ | expr op=(PLUS | MINUS) expr          #additiveExpr
+ | expr op=(LTEQ | GTEQ | LT | GT) expr #relationalExpr
+ | expr op=(EQ | NEQ) expr              #equalityExpr
+ | expr AND expr                        #andExpr
+ | expr OR expr                         #orExpr
+ | atom                                 #atomExpr
+ ;
+
+atom
+ : OPAR expr CPAR #parExpr
+ | (INT | FLOAT)  #numberAtom
+ | (TRUE | FALSE) #booleanAtom
+ | ID             #idAtom
+ | STRING         #stringAtom
+ | NIL            #nilAtom
+ ;
+
+COMMA : ',';
+OR : '||';
+AND : '&&';
+EQ : '==';
+NEQ : '!=';
+GT : '>';
+LT : '<';
+GTEQ : '>=';
+LTEQ : '<=';
+PLUS : '+';
+MINUS : '-';
+MULT : '*';
+DIV : '/';
+MOD : '%';
+POW : '^';
+NOT : '!';
+
+SCOL : ';';
+ASSIGN : '=';
+OPAR : '(';
+CPAR : ')';
+OBRACE : '{';
+CBRACE : '}';
+
+TRUE : 'true';
+FALSE : 'false';
+NIL : 'nil';
+IF : 'if';
+ELSE : 'else';
+WHILE : 'while';
+LOG : 'log';
+
+ID
+ : [a-zA-Z_] [a-zA-Z_0-9]*
+ ;
+
+INT
+ : [0-9]+
+ ;
+
+FLOAT
+ : [0-9]+ '.' [0-9]* 
+ | '.' [0-9]+
+ ;
+
+STRING
+ : '"' (~["\r\n] | '""')* '"'
+ ;
+
+COMMENT
+ : '#' ~[\r\n]* -> skip
+ ;
+
+SPACE
+ : [ \t\r\n] -> skip
+ ;
+
+OTHER
+ : . 
+ ;
